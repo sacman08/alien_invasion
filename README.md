@@ -1,1 +1,3 @@
-# alien_invasion
+Alien Invasion
+
+A project game using the pygame module.
