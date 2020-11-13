@@ -2,6 +2,8 @@ import sys
 import pygame
 from settings import Settings
 from ship import Ship
+from ammo import Bullet
+from alien import Alien
 
 class AlienInvasion:
     """Overall class to manage the game."""
@@ -16,6 +18,10 @@ class AlienInvasion:
         pygame.display.set_caption("Alien Invasion")
         
         self.ship = Ship(self)
+        self.bullets = pygame.sprite.Group()
+        self.aliens = pygame.sprite.Group()
+        
+        self._create_fleet()
         
         
     def run_game(self):
@@ -23,7 +29,14 @@ class AlienInvasion:
         while True:
             self._check_events()
             self.ship.update()
+            self._update_ammo()
             self._update_screen()
+            
+    def _create_fleet(self):
+        """Do the fleet!"""
+        #Make an alien
+        alien = Alien(self)
+        self.aliens.add(alien)
             
                    
     def _check_events(self):
@@ -45,18 +58,38 @@ class AlienInvasion:
             self.ship.moving_left = True
         elif event.key == pygame.K_q:
             sys.exit()
+        elif event.key == pygame.K_SPACE:
+            self._fire_ammo()
             
     def _check_keyup_events(self, event):
         """Respond to key releases"""
         if event.key == pygame.K_RIGHT:
             self.ship.moving_right = False
         elif event.key == pygame.K_LEFT:
-            self.ship.moving_left = False        
+            self.ship.moving_left = False
+            
+    def _fire_ammo(self):
+        """Create a new round and add it to the group"""
+        if len(self.bullets) < self.settings.bullets_allowed:
+            new_ammo = Bullet(self)
+            self.bullets.add(new_ammo)
+            
+    def _update_ammo(self):
+        #remove old ammo, add any new
+        self.bullets.update()
+    
+        #Remove ammo past edge of top screen
+        for bullet in self.bullets.copy():
+            if bullet.rect.bottom <= 0:
+                self.bullets.remove(bullet)       
         
     def _update_screen(self):
         """Update image on screen, flip to new screen"""
         self.screen.fill(self.settings.bg_color)
         self.ship.blitme()
+        for bullet in self.bullets.sprites():
+            bullet.draw_bullet()  
+        self.aliens.draw(self.screen)
         
         # Make the draw screen viewable.        
         pygame.display.flip()
