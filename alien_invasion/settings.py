@@ -5,9 +5,11 @@ class Settings:
         # Screen settings
         self.screen_width = 1200
         self.screen_height = 700
-        self.bg_color = (105, 105, 105)
+        self.bg_color = (0, 0, 0)
         
         # TODO Add dots for stars
+        self.star_height = 1
+        self.star_width = 1
         self.bg_stars = (255, 255, 51)
         
         #TODO Add rain drops to fall to bottom
