@@ -4,6 +4,10 @@ from settings import Settings
 from ship import Ship
 from ammo import Bullet
 from alien import Alien
+from random import randint
+
+#TODO Add stars in the background (optional make random each game)
+#TODO add rain that falls to bottom of screen
 
 class AlienInvasion:
     """Overall class to manage the game."""
@@ -12,7 +16,7 @@ class AlienInvasion:
         pygame.init()
         self.settings = Settings()
         
-        self.screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((1200, 720))
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
         pygame.display.set_caption("Alien Invasion")
@@ -30,6 +34,7 @@ class AlienInvasion:
             self._check_events()
             self.ship.update()
             self._update_ammo()
+            self._update_aliens()
             self._update_screen()
             
     def _create_fleet(self):
@@ -42,7 +47,7 @@ class AlienInvasion:
         
         #Calc num of rows to fit on screen
         ship_height = self.ship.rect.height
-        available_space_y = (self.settings.screen_height - (3 * alien_height) - ship_height)
+        available_space_y = (self.settings.screen_height - (5 * alien_height) - ship_height)
         number_rows = available_space_y // (2 * alien_height)
         
         #Create full fleet
@@ -57,10 +62,22 @@ class AlienInvasion:
         alien.rect.x = alien.x
         alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
         self.aliens.add(alien)
+        
+    def _check_fleet_edges(self):
+        #Check edges and changing alien movement as needed
+        for alien in self.aliens.sprites():
+            if alien.check_edges():
+                self._change_fleet_direction()
+                break
             
+    def _change_fleet_direction(self):
+        #Drop one row, then change direction
+        for alien in self.aliens.sprites():
+            alien.rect.y += self.settings.fleet_drop_speed
+        self.settings.fleet_direction *= -1            
                    
     def _check_events(self):
-        """Respond to key and mouse events"""
+        """Respond to any key and mouse events"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
@@ -89,10 +106,17 @@ class AlienInvasion:
             self.ship.moving_left = False
             
     def _fire_ammo(self):
-        """Create a new round and add it to the group"""
+        """Create a new laser and add it to the group"""
         if len(self.bullets) < self.settings.bullets_allowed:
             new_ammo = Bullet(self)
             self.bullets.add(new_ammo)
+            
+            
+    def _update_aliens(self):
+        #Check alien position then update
+        self._check_fleet_edges()
+        #update where aliens are located
+        self.aliens.update()
             
     def _update_ammo(self):
         #remove old ammo, add any new
@@ -106,6 +130,7 @@ class AlienInvasion:
     def _update_screen(self):
         """Update image on screen, flip to new screen"""
         self.screen.fill(self.settings.bg_color)
+        
         self.ship.blitme()
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()  

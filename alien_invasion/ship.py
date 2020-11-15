@@ -9,7 +9,7 @@ class Ship:
         self.settings = ai_game.settings
         self.screen_rect = ai_game.screen.get_rect()
         
-        self.image = pygame.image.load('images/ship.bmp')
+        self.image = pygame.image.load('images/ship_t.PNG')
         self.rect = self.image.get_rect()
         
         #Start at bottom middle
