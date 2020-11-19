@@ -3,6 +3,7 @@ from time import sleep
 import pygame
 from settings import Settings
 from game_stats import GameStats
+from scoreboard import Scoreboard
 from button import Button
 from ship import Ship
 from ammo import Bullet
@@ -12,6 +13,7 @@ from random import randint
 
 #TODO Add stars in the background (optional make random each game)
 #TODO add rain that falls to bottom of screen
+#TODO Store high score premanently to display each time game starts fresh.
 
 class AlienInvasion:
     """Overall class to manage the game."""
@@ -27,6 +29,8 @@ class AlienInvasion:
         
         #Setup instance for stats for each game
         self.stats = GameStats(self)
+        #Setup the scoreboard
+        self.sb = Scoreboard(self)
         
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
@@ -108,6 +112,9 @@ class AlienInvasion:
         if button_clicked and not self.stats.game_active:
             self.settings.initialize_dynamic_settings()
             self.stats.game_active = True
+            self.sb.prep_score()
+            self.sb.prep_level()
+            self.sb.prep_ships()
                        
             self.aliens.empty()
             self.bullets.empty()
@@ -147,6 +154,8 @@ class AlienInvasion:
             
             #Reduce ship count
             self.stats.ships_left -= 1
+            #Reduce ships left shown on screen
+            self.sb.prep_ships()
         
             #Remove remaining aliens and ammo
             self.aliens.empty()
@@ -201,11 +210,22 @@ class AlienInvasion:
     def _check_ammo_alien_collision(self):
         #Check to see if any rounds hit aliens; remove alien and ammo
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+        
+        if collisions:
+            for aliens in collisions.values():
+                self.stats.score += self.settings.alien_points * len(aliens)
+            self.sb.prep_score()
+            self.sb.check_high_score()
+            
         if not self.aliens:
             #When all killed, destroy all ammo, make a new fleet
             self.bullets.empty()
             self._create_fleet()
             self.settings.increase_speed()
+            
+            #Increase the level
+            self.stats.level += 1
+            self.sb.prep_level()
         
     def _update_screen(self):
         """Update image on screen, flip to new screen"""
@@ -215,6 +235,9 @@ class AlienInvasion:
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()  
         self.aliens.draw(self.screen)
+        
+        #Draw the scoring information on screen
+        self.sb.show_score()
         
         #Show the Play button from init while game is inactive
         if not self.stats.game_active:

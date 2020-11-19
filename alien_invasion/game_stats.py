@@ -7,7 +7,8 @@ class GameStats:
         #Initialize the stats
         self.settings = ai_game.settings
         self.reset_stats()
-        
+        self.high_score = 0
+        self.level = 1
         #Make game inactive until they press play
         self.game_active = False
         
